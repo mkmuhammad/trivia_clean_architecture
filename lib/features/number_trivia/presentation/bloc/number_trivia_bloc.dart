@@ -28,46 +28,45 @@ class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
     required this.getRandomNumberTriviaUsecase,
     required this.inputConverter,
   }) : super(EmptyState()) {
-    on<NumberTriviaEvent>((event, emit) {
-      // if (event is GetTriviaForConcreteNumberEvent) {
-      //   onGetConcreteNumberTriviaEvent(event, emit);
-      // }
-    });
-
-    on<GetTriviaForConcreteNumberEvent>(onGetConcreteNumberTriviaEvent);
-    on<GetTriviaForRandomNumberEvent>(onGetRandomNumberTriviaEvent);
+    on<GetTriviaForConcreteNumberEvent>(_onGetConcreteNumberTriviaEvent);
+    on<GetTriviaForRandomNumberEvent>(_onGetRandomNumberTriviaEvent);
   }
 
-  onGetConcreteNumberTriviaEvent(
-      GetTriviaForConcreteNumberEvent event, Emitter emitter) async* {
+  void _onGetConcreteNumberTriviaEvent(GetTriviaForConcreteNumberEvent event,
+      Emitter<NumberTriviaState> emit) async {
     final inputEither =
         inputConverter.stringToUnsignedInteger(event.numberString);
-
-    yield* inputEither.fold((failure) async* {
-      yield const ErrorState(message: INVALID_INPUT_FAILURE_MESSAGE);
-    }, (integer) async* {
-      yield LoadingState();
-      final failureOrTrivia =
-          await getConcreteNumberTriviaUsecase(Params(number: integer));
-
-      yield* _eitherLoadedOrErrorState(failureOrTrivia);
-    });
-  }
-
-  onGetRandomNumberTriviaEvent(
-      GetTriviaForRandomNumberEvent event, Emitter emitter) async* {
-    yield LoadingState();
-    final failureOrTrivia = await getRandomNumberTriviaUsecase(NoParams());
-
-    yield* _eitherLoadedOrErrorState(failureOrTrivia);
-  }
-
-  Stream<NumberTriviaState?> _eitherLoadedOrErrorState(
-      Either<Failure, NumberTriviaEntity>? failureOrTrivia) async* {
-    yield failureOrTrivia?.fold(
-      (failure) => ErrorState(message: _mapFailureToMessage(failure)),
-      (trivia) => LoadedState(trivia: trivia),
+    await inputEither.fold(
+      (failure) async =>
+          emit(const ErrorState(message: INVALID_INPUT_FAILURE_MESSAGE)),
+      (integer) async {
+        emit(LoadingState());
+        final failureOrTrivia =
+            await getConcreteNumberTriviaUsecase(Params(number: integer));
+        _emitEitherLoadedOrErrorState(failureOrTrivia, emit);
+      },
     );
+  }
+
+  Future<void> _onGetRandomNumberTriviaEvent(
+      GetTriviaForRandomNumberEvent event,
+      Emitter<NumberTriviaState> emit) async {
+    emit(LoadingState());
+    final failureOrTrivia = await getRandomNumberTriviaUsecase(NoParams());
+    _emitEitherLoadedOrErrorState(failureOrTrivia, emit);
+  }
+
+  void _emitEitherLoadedOrErrorState(
+      Either<Failure, NumberTriviaEntity>? failureOrTrivia,
+      Emitter<NumberTriviaState> emit) {
+    if (failureOrTrivia == null) {
+      emit(const ErrorState(message: 'Unexpected Error'));
+    } else {
+      failureOrTrivia.fold(
+        (failure) => emit(ErrorState(message: _mapFailureToMessage(failure))),
+        (trivia) => emit(LoadedState(trivia: trivia)),
+      );
+    }
   }
 
   String _mapFailureToMessage(Failure failure) {
