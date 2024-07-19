@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:trivia_clean_architecture/injection_container.dart' as di;
 
 void main() {
+  di.init();
   runApp(const MyApp());
 }
 
