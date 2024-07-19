@@ -4,15 +4,15 @@ import '../../../../core/error/exceptions.dart';
 import '../models/number_trivia_model.dart';
 
 abstract class NumberTriviaRemoteDataSource {
-  /// Calls the http://numbersapi.com/{numbers} endpoint
+  /// Calls the http://numbersapi.com/{number} endpoint
   ///
   /// Throws a [ServerException] for all error codes
-  Future<NumberTriviaModel>? getConcreteNumberTrivia(int? number);
+  Future<NumberTriviaModel> getConcreteNumberTrivia(int number);
 
   /// Calls the http://numbersapi.com/random endpoint
   ///
   /// Throws a [ServerException] for all error codes
-  Future<NumberTriviaModel>? getRandomNumberTrivia();
+  Future<NumberTriviaModel> getRandomNumberTrivia();
 }
 
 class NumberTriviaRemoteDataSourceImpl implements NumberTriviaRemoteDataSource {
@@ -21,14 +21,18 @@ class NumberTriviaRemoteDataSourceImpl implements NumberTriviaRemoteDataSource {
   NumberTriviaRemoteDataSourceImpl({required this.client});
 
   @override
-  Future<NumberTriviaModel>? getConcreteNumberTrivia(int? number) =>
-      _getTriviaFromUrl('http://numbersapi.com/$number');
+  Future<NumberTriviaModel> getConcreteNumberTrivia(int number) {
+    if (number == null) {
+      throw ArgumentError('Number cannot be null');
+    }
+    return _getTriviaFromUrl('http://numbersapi.com/$number');
+  }
 
   @override
-  Future<NumberTriviaModel>? getRandomNumberTrivia() =>
+  Future<NumberTriviaModel> getRandomNumberTrivia() =>
       _getTriviaFromUrl('http://numbersapi.com/random');
 
-  Future<NumberTriviaModel>? _getTriviaFromUrl(String url) async {
+  Future<NumberTriviaModel> _getTriviaFromUrl(String url) async {
     final response = await client.get(
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},

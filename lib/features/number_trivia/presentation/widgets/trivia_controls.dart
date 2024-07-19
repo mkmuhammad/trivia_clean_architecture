@@ -5,73 +5,97 @@ import 'package:gap/gap.dart';
 import '../bloc/number_trivia_bloc.dart';
 
 class TriviaControls extends StatefulWidget {
-  const TriviaControls({
-    super.key,
-  });
+  const TriviaControls({super.key});
 
   @override
   State<TriviaControls> createState() => _TriviaControlsState();
 }
 
 class _TriviaControlsState extends State<TriviaControls> {
-  String inputStr = '';
   final controller = TextEditingController();
+  String? errorMessage;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-            hintText: 'Input a number',
+        _buildTextField(),
+        if (errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child:
+                Text(errorMessage!, style: const TextStyle(color: Colors.red)),
           ),
-          onChanged: (value) {
-            inputStr = value;
-          },
-          onSubmitted: (_) {
-            addConcreteEvent();
-          },
+        const Gap(10.0),
+        _buildActionButtons(),
+      ],
+    );
+  }
+
+  Widget _buildTextField() {
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        border: const OutlineInputBorder(),
+        hintText: 'Input a number',
+        errorText: errorMessage,
+      ),
+      onChanged: (value) {
+        if (errorMessage != null) {
+          setState(() {
+            errorMessage = null;
+          });
+        }
+      },
+      onSubmitted: (_) => _addConcreteEvent(),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Expanded(
+          child: ElevatedButton(
+            onPressed: _addRandomEvent,
+            child: const Text('Get Random Trivia'),
+          ),
         ),
         const Gap(10.0),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: addRandomEvent,
-                child: const Text('Get Random Trivia'),
-              ),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: _addConcreteEvent,
+            style: ButtonStyle(
+              backgroundColor:
+                  MaterialStateProperty.all(Colors.tealAccent[700]),
             ),
-            const Gap(10.0),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: addConcreteEvent,
-                style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all(Colors.tealAccent[700]),
-                ),
-                child: const Text(
-                  'Search Trivia',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
+            child: const Text(
+              'Search Trivia',
+              style: TextStyle(color: Colors.white),
             ),
-          ],
+          ),
         ),
       ],
     );
   }
 
-  void addConcreteEvent() {
-    controller.clear();
+  void _addConcreteEvent() {
+    final inputNumber = int.tryParse(controller.text);
+    if (inputNumber == null) {
+      setState(() {
+        errorMessage = 'Please enter a valid number';
+      });
+      return;
+    }
     BlocProvider.of<NumberTriviaBloc>(context)
-        .add(GetTriviaForConcreteNumberEvent(inputStr));
+        .add(GetTriviaForConcreteNumberEvent(controller.text));
+    FocusScope.of(context).unfocus();
+    controller.clear();
   }
 
-  void addRandomEvent() {
+  void _addRandomEvent() {
+    FocusScope.of(context).unfocus();
     BlocProvider.of<NumberTriviaBloc>(context)
         .add(const GetTriviaForRandomNumberEvent());
   }

@@ -1,5 +1,4 @@
 import 'package:dartz/dartz.dart';
-import 'package:equatable/equatable.dart';
 import 'package:trivia_clean_architecture/core/error/failures.dart';
 import 'package:trivia_clean_architecture/core/usecases/usecase.dart';
 import 'package:trivia_clean_architecture/features/number_trivia/domain/entities/number_trivia_entity.dart';
@@ -13,7 +12,7 @@ class GetRandomNumberTriviaUsecase
   GetRandomNumberTriviaUsecase(this.repository);
 
   @override
-  Future<Either<Failure, NumberTriviaEntity>?> call(NoParams params) async {
-    return await repository.getRandomNumberTrivia();
+  Future<Either<Failure, NumberTriviaEntity>> call(NoParams params) async {
+    return repository.getRandomNumberTrivia();
   }
 }

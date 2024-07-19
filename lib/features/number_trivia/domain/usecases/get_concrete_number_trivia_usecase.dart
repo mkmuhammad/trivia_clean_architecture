@@ -6,6 +6,7 @@ import 'package:trivia_clean_architecture/features/number_trivia/domain/reposito
 
 import '../../../../core/error/failures.dart';
 
+/// A use case for getting trivia about a specific number.
 class GetConcreteNumberTriviaUsecase
     implements Usecase<NumberTriviaEntity, Params> {
   final NumberTriviaRepository repository;
@@ -13,16 +14,17 @@ class GetConcreteNumberTriviaUsecase
   GetConcreteNumberTriviaUsecase(this.repository);
 
   @override
-  Future<Either<Failure, NumberTriviaEntity>?> call(Params params) async {
-    return await repository.getConcreteNumberTrivia(params.number);
+  Future<Either<Failure, NumberTriviaEntity>> call(Params params) async {
+    return repository.getConcreteNumberTrivia(params.number);
   }
 }
 
+/// Parameters for [GetConcreteNumberTriviaUsecase], encapsulating the number for which trivia is requested.
 class Params extends Equatable {
   final int number;
 
   const Params({required this.number});
 
   @override
-  List<Object?> get props => [number];
+  List<Object> get props => [number];
 }
